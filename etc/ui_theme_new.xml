@@ -1,0 +1,15 @@
+<resources>
+  <color name="primaryColor">#b4b4b4</color>  
+  <color name="primaryLightColor">#3a3a3a</color>  
+  <color name="primaryDarkColor">#1a1a1a</color>  
+
+  <color name="secondaryColor">#2e2e2e</color>  
+  <color name="secondaryLightColor">#505050</color>  
+  <color name="secondaryDarkColor">#1c1c1c</color>  
+
+  <color name="primaryTextColor">#e0e0e0</color>  
+  <color name="secondaryTextColor">#bdbdbd</color>  
+
+  <color name="accentColor">#9c27b0</color>  
+  <color name="errorColor">#e57373</color>  
+</resources>
