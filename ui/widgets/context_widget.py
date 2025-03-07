@@ -1,32 +1,11 @@
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore
 from .context_combo import ContextCombo
-from constants import ICON_DIR
-from PySide2.QtSvg import QSvgRenderer
-
-
-def colorize_svg(svg_path, color):
-    """Load an SVG and apply a solid color to it."""
-    renderer = QSvgRenderer(svg_path)
-    pixmap = QtGui.QPixmap(32, 32)  # Set icon size
-    pixmap.fill(QtCore.Qt.transparent)  # Transparent background
-
-    painter = QtGui.QPainter(pixmap)
-    renderer.render(painter)  # Draw original SVG
-
-    # Apply color overlay
-    painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceAtop)
-    painter.fillRect(pixmap.rect(), color)
-    
-    painter.end()
-    return QtGui.QIcon(pixmap)
-
 
 
 class ContextWidget(QtWidgets.QWidget):
     on_show_changed = QtCore.Signal((object,), ())
     on_seq_changed = QtCore.Signal((object,), ())
     on_shot_changed = QtCore.Signal((object,), ())
-    on_refresh = QtCore.Signal()
 
     def __init__(self, sg_util,  parent=None):
         super().__init__(parent=parent)
@@ -54,18 +33,11 @@ class ContextWidget(QtWidgets.QWidget):
         self.shot_combo = ContextCombo('Shot', 'Select shot')
         self.main_layout.addWidget(self.shot_combo)
 
-        self.refresh_button = QtWidgets.QPushButton()
-        self.refresh_button.setIcon(colorize_svg(ICON_DIR+"/refresh-ccw.svg", '#d4d4d8'))
-        self.main_layout.addWidget(self.refresh_button)
 
         # connections
         self.show_combo.on_selection_changed.connect(self.show_changed)
         self.seq_combo.on_selection_changed.connect(self.seq_changed)
         self.shot_combo.on_selection_changed.connect(self.shot_changed)
-        self.refresh_button.clicked.connect(self.refreshed)
-
-    def refreshed(self):
-        self.on_refresh.emit()
 
     def show_changed(self, item):
         if not item:

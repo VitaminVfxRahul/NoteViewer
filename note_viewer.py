@@ -3,8 +3,9 @@ from ui.widgets.context_widget import ContextWidget
 from ui.widgets.filter_widget import FilterWidget
 from ui.note_item import NewNoteWidget, NoteItem
 from sg_util import SG_Utils
-from constants import CSS_FILE, THEME_FILE
+from constants import CSS_FILE, THEME_FILE, ICON_DIR
 from qt_material import apply_stylesheet
+from ui.utils import colorize_svg
 
 
 class NoteViewer(QtWidgets.QWidget):
@@ -19,44 +20,49 @@ class NoteViewer(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
-        # Left panel container
-        self.left_container = QtWidgets.QWidget()   
-        self.left_layout = QtWidgets.QVBoxLayout(self.left_container)
-        self.left_layout.setContentsMargins(0, 0, 0, 0)  
+        self.filter_layout = QtWidgets.QHBoxLayout()
 
         self.context_widget = ContextWidget(sg_util=self.sg_util)
-        self.left_layout.addWidget(self.context_widget)
+        self.filter_layout.addWidget(self.context_widget)
 
         self.filter_widget = FilterWidget()
-        self.left_layout.addWidget(self.filter_widget)
+        self.filter_layout.addWidget(self.filter_widget)
+
+        self.refresh_button = QtWidgets.QPushButton()
+        self.refresh_button.setIcon(colorize_svg(ICON_DIR+"/refresh-ccw.svg", '#d4d4d8'))
+        self.refresh_button.setMaximumWidth(40)
+        self.refresh_button.setStyleSheet('border: 0px solid')
+
+        self.filter_layout.addWidget(self.refresh_button)
+        self.main_layout.addLayout(self.filter_layout)
 
         self.add_note_button = QtWidgets.QPushButton("Add Note")
         self.add_note_button.setEnabled(False)
 
-        self.main_layout.addWidget(self.left_container)   
-
         # Note panel 
         self.scroll_area = QtWidgets.QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.main_layout.addWidget(self.scroll_area, 1)   
+        self.scroll_area.setAlignment(QtCore.Qt.AlignTop)
+        self.main_layout.addWidget(self.scroll_area)   
 
         self.note_container = QtWidgets.QWidget()   
         self.note_layout = QtWidgets.QVBoxLayout(self.note_container)
-        self.note_layout.setAlignment(QtCore.Qt.AlignTop)
-        self.note_layout.setContentsMargins(0, 0, 0, 0)
+        self.note_layout.setSpacing(0)
         self.scroll_area.setWidget(self.note_container)
 
         self.main_layout.addWidget(self.add_note_button)
         self.add_note_button.clicked.connect(self.open_add_note)
-        self.resize(600, 800)
+        self.resize(1300, 800)
 
         # connection 
         self.context_widget.on_show_changed.connect(self.load_filter_widget)
         self.context_widget.on_seq_changed.connect(self.load_filter_widget)
         self.context_widget.on_shot_changed.connect(self.load_filter_widget)
+
         self.filter_widget.on_task_changed.connect(self.load_fitered_notes)
         self.filter_widget.on_version_changed.connect(self.load_fitered_notes)
-        self.context_widget.on_refresh.connect(self.load_fitered_notes)
+
+        self.refresh_button.clicked.connect(self.load_fitered_notes)
 
         # setting defaults 
         if show:
@@ -130,8 +136,9 @@ class NoteViewer(QtWidgets.QWidget):
 
     def append_note_item(self, note):
         note_item = NoteItem(self.sg_util, new_note=False, note=note)
+        note_item.setMinimumHeight(350)
         note_item.display_thread()
-        self.note_layout.addWidget(note_item)
+        self.note_layout.addWidget(note_item, alignment=QtCore.Qt.AlignTop)
         note_item.onPressOk.connect(self.open_reply_window)
 
     def get_filtered_notes(self, filters=None):
@@ -179,12 +186,14 @@ class NoteViewer(QtWidgets.QWidget):
                 widget.deleteLater()
 
 
+def launch():
+    w = NoteViewer()
+    w.show()
+
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
     w = NoteViewer(show='DID', seq='101', shot='040_010')
-    apply_stylesheet( app,  theme=THEME_FILE
-                    #  , css_file=CSS_FILE 
-                     )
+    apply_stylesheet( app,  theme=THEME_FILE, css_file=CSS_FILE  )
     w.show()
     app.exec_()
 

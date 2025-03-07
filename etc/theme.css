@@ -32,9 +32,15 @@ QTreeView::branch:open:has-children:has-siblings {
     }
 }
 
-QTreeView QHeaderView::section {
+QTreeView::QHeaderView::section {
         {
         border: 1px solid #8f8f8f;
     }
 
+}
+
+QPushbutton {
+        {
+        border: 0px solid;
+    }
 }

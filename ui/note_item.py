@@ -8,6 +8,24 @@ from .widgets.image_widget import ImageDialog
 from constants import ICON_DIR
 
 
+class TopLabel(QtWidgets.QWidget):
+    def __init__(self, title, stretch=None, parent=None):
+        super().__init__(parent=parent)
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+
+        self.title_label = QtWidgets.QLabel(title)
+        self.title_label.setStyleSheet("font-weight: bold;")
+        self.main_layout.addWidget(self.title_label)
+
+        self.text_label = QtWidgets.QLabel()
+        if stretch:
+            self.text_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        
+        self.main_layout.addWidget(self.text_label)
+
+    def set_text(self, text):
+        self.text_label.setText(text)
+
 class NoteItem(QtWidgets.QWidget):
     onPressOk = QtCore.Signal(object)
 
@@ -27,15 +45,37 @@ class NoteItem(QtWidgets.QWidget):
         self.setFixedHeight(200)
 
     def setup_ui(self):
-        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.frame_layout = QtWidgets.QHBoxLayout(self)
+        self.frame_layout.setContentsMargins(0,0,0,0)
+        frame = QtWidgets.QFrame()
+        frame.setObjectName('noteItemFrame')
+        self.frame_layout.addWidget(frame, alignment=QtCore.Qt.AlignTop)
+        frame.setFrameShape(QtWidgets.QFrame.NoFrame)
+        frame.setStyleSheet('QFrame#noteItemFrame { background-color: #222222; border: 0px solid; padding: 0px 10px 10px } ')  
+        # frame.setFrameShadow(QtWidgets.QFrame.Plain)  
 
+        self.main_layout = QtWidgets.QGridLayout(frame)
+        # self.main_layout.setContentsMargins(6,9,6,9)
+
+        self.subject_label = TopLabel('Subject', stretch=True)
+        self.subject_label.setMinimumHeight(40)
+        self.main_layout.addWidget(self.subject_label, 0, 0, 1, 1)
+
+        self.user_label = TopLabel('User')
+        self.main_layout.addWidget(self.user_label, 0, 1, 1, 1)
+
+        self.date_label = TopLabel("Date")
+        self.main_layout.addWidget(self.date_label, 0, 2, 1, 1)
+        
         # text edit
         self.text_edit = QtWidgets.QTextEdit()
-        self.main_layout.addWidget(self.text_edit)
+        self.text_edit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.text_edit.setStyleSheet('border: 0px solid')
+        self.main_layout.addWidget(self.text_edit, 1, 0, 1, 3)
 
         # image table
         self.attachment_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addLayout(self.attachment_layout)
+        self.main_layout.addLayout(self.attachment_layout, 1,3,1,1)
 
         self.table_view = QtWidgets.QTableView()
         self.table_view.setFixedWidth(300)
@@ -61,10 +101,12 @@ class NoteItem(QtWidgets.QWidget):
             self.table_view.setItemDelegateForColumn(2, delegate2)
             self.table_view.setColumnWidth(2, 40)
             self.attach_button = QtWidgets.QPushButton('Attach')
+            self.attach_button.setStyleSheet('border: 1px solid ')
             self.button_layout.addWidget(self.attach_button)
             self.attach_button.clicked.connect(self.browse_attachment)
 
         self.ok_button = QtWidgets.QPushButton("Ok" if self.new_note else "Reply")
+        self.ok_button.setStyleSheet('border: 1px solid')
         self.button_layout.addWidget(self.ok_button)
         self.ok_button.clicked.connect(self.ok_clicked)
 
@@ -109,37 +151,20 @@ class NoteItem(QtWidgets.QWidget):
         user = self.note.get("user", {}).get("name", "")
         date = self.note.get("created_at").strftime("%b %d, %Y")
         note_content = self.note.get("content")
+
+        self.subject_label.set_text(f'Subject: {subject}')
+        self.user_label.set_text(f'User: {user}')
+        self.date_label.set_text(f'Date: {date}')
         
-        content = "<div style='display: flex; gap: 4px; font-family: Arial, sans-serif; font-size: 12px;'>"
-        content += "<div style='flex: 1; border-right: 2px solid #ddd; padding-right: 4px;'>"
-
-        content += f"<h4>Subject: {subject}</h4>"
-        content += f"<p>{note_content}</p>"
-        content += "</div>"
-        content += "<div style='flex: 1; padding-left: 10px;'>"
-
-        content += "<strong>Tasks:</strong>"
-        if self.note.get('tasks'):
-            content += "<ul>"
-            for each in self.note.get("tasks"):
-                content += f"<li><strong>{each.get('name')}</strong> </li>"
-            content += "</ul>"
-        else:
-            content += "<br>"
-
+        content = f"<p>{note_content}</p>"
         content += "<strong>Entities:</strong>"
         content += "<ul>"
+
         for each in self.note.get("note_links"):
+            if each.get('type', '').lower() == 'shot':
+                continue
             content += f"<li>{each.get('type')}: <strong>{each.get('name') or each.get('content')}</strong> </li>"
         content += "</ul>"
-
-        content += "<p>"
-        content += f"User:<strong>{user}</strong><br>"
-        content += f"Date:<strong>{date}</strong>"
-        content += "</p>"
-
-        content += "</div>"
-        content += "</div>"
 
         self.text_edit.setHtml(content)
 
@@ -173,7 +198,7 @@ class NewNoteWidget(QtWidgets.QDialog):
         self.context_data = context_data
         self.sg_util = sg_util
         self.main_layout  = QtWidgets.QHBoxLayout(self)
-        self.main_layout.setMargin(0)
+        self.main_layout.setContentsMargins(0, 0,0,0)
         self.note_item = NoteItem(sg_util=self.sg_util, new_note=True)
         self.main_layout.addWidget(self.note_item)
 

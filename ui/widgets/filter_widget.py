@@ -17,7 +17,7 @@ class FilterWidget(QtWidgets.QWidget):
         self.setup_ui()
 
     def setup_ui(self):
-        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout = QtWidgets.QHBoxLayout(self)
 
 
         # task widget

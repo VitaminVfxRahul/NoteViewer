@@ -11,9 +11,9 @@ class ContextCombo(QtWidgets.QWidget):
         self.placeholder = placeholder
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.setMargin(0)
+        self.main_layout.setContentsMargins(0, 0,0,0)
         self.item_label = QtWidgets.QLabel(label)
-        self.item_label.setFixedWidth(100)
+        self.item_label.setFixedWidth(60)
         self.item_combo = QtWidgets.QComboBox()
 
         self.main_layout.addWidget(self.item_label)
