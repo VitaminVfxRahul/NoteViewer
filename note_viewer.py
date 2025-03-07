@@ -21,6 +21,7 @@ class NoteViewer(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         self.filter_layout = QtWidgets.QHBoxLayout()
+        self.filter_layout.setSpacing(0)
 
         self.context_widget = ContextWidget(sg_util=self.sg_util)
         self.filter_layout.addWidget(self.context_widget)
@@ -31,6 +32,8 @@ class NoteViewer(QtWidgets.QWidget):
         self.refresh_button = QtWidgets.QPushButton()
         self.refresh_button.setIcon(colorize_svg(ICON_DIR+"/refresh-ccw.svg", '#d4d4d8'))
         self.refresh_button.setMaximumWidth(40)
+        self.refresh_button.setMinimumHeight(50)
+    
         self.refresh_button.setStyleSheet('border: 0px solid')
 
         self.filter_layout.addWidget(self.refresh_button)

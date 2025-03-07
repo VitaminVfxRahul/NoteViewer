@@ -1,6 +1,6 @@
 from pathlib import Path
 import datetime
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore, QtGui
 
 from .widgets.table_model import NoteTableModel
 from .widgets.table_button_delegate import ButtonDelegate
@@ -8,8 +8,19 @@ from .widgets.image_widget import ImageDialog
 from constants import ICON_DIR
 
 
+class ElideLabel(QtWidgets.QLabel):
+    def __init__(self, text, max_width, parent=None):
+        super().__init__(parent)
+        self.max_width = max_width
+        self.setText(self.elide_text(text))
+
+    def elide_text(self, text):
+        font_metrics = QtGui.QFontMetrics(self.font())
+        return font_metrics.elidedText(text, QtCore.Qt.ElideRight, self.max_width)
+
+
 class TopLabel(QtWidgets.QWidget):
-    def __init__(self, title, stretch=None, parent=None):
+    def __init__(self, title, stretch=None, elide_label=False, parent=None):
         super().__init__(parent=parent)
         self.main_layout = QtWidgets.QHBoxLayout(self)
 
@@ -18,6 +29,8 @@ class TopLabel(QtWidgets.QWidget):
         self.main_layout.addWidget(self.title_label)
 
         self.text_label = QtWidgets.QLabel()
+        if elide_label:
+            self.text_label = ElideLabel('', 200)
         if stretch:
             self.text_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         
@@ -57,31 +70,35 @@ class NoteItem(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QGridLayout(frame)
         # self.main_layout.setContentsMargins(6,9,6,9)
 
-        self.subject_label = TopLabel('Subject', stretch=True)
+        self.subject_label = TopLabel('Subject:', stretch=True)
         self.subject_label.setMinimumHeight(40)
         self.main_layout.addWidget(self.subject_label, 0, 0, 1, 1)
 
-        self.user_label = TopLabel('User')
-        self.main_layout.addWidget(self.user_label, 0, 1, 1, 1)
 
-        self.date_label = TopLabel("Date")
-        self.main_layout.addWidget(self.date_label, 0, 2, 1, 1)
+        self.version_label = TopLabel('Ver:', elide_label=True)
+        self.main_layout.addWidget(self.version_label, 0, 1, 1, 1)
+
+        self.user_label = TopLabel('User:')
+        self.main_layout.addWidget(self.user_label, 0, 2, 1, 1)
+
+        self.date_label = TopLabel("Date:")
+        self.main_layout.addWidget(self.date_label, 0, 3, 1, 1)
         
         # text edit
         self.text_edit = QtWidgets.QTextEdit()
+        # self.text_edit.s
         self.text_edit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         self.text_edit.setStyleSheet('border: 0px solid')
-        self.main_layout.addWidget(self.text_edit, 1, 0, 1, 3)
+        self.main_layout.addWidget(self.text_edit, 1, 0, 1, 4)
 
         # image table
         self.attachment_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addLayout(self.attachment_layout, 1,3,1,1)
+        self.main_layout.addLayout(self.attachment_layout, 1,4,1,1)
 
         self.table_view = QtWidgets.QTableView()
         self.table_view.setFixedWidth(300)
         self.attachment_layout.addWidget(self.table_view)
        
-
         self.model = NoteTableModel(self.note.get('attachments', []), self.headers)
         self.table_view.setModel(self.model)
         self.table_view.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -152,20 +169,24 @@ class NoteItem(QtWidgets.QWidget):
         date = self.note.get("created_at").strftime("%b %d, %Y")
         note_content = self.note.get("content")
 
-        self.subject_label.set_text(f'Subject: {subject}')
-        self.user_label.set_text(f'User: {user}')
-        self.date_label.set_text(f'Date: {date}')
+        self.subject_label.set_text(f'{subject}')
+        self.user_label.set_text(f'{user}')
+        self.date_label.set_text(f'{date}')
         
         content = f"<p>{note_content}</p>"
         content += "<strong>Entities:</strong>"
         content += "<ul>"
 
+        version = ''
         for each in self.note.get("note_links"):
-            if each.get('type', '').lower() == 'shot':
+            if each.get('type').lower() == 'version':
+                version = each.get('name')
+            if each.get('type', '').lower() in ('shot', 'version'):
                 continue
             content += f"<li>{each.get('type')}: <strong>{each.get('name') or each.get('content')}</strong> </li>"
         content += "</ul>"
 
+        self.version_label.set_text(version)
         self.text_edit.setHtml(content)
 
         # content = f"<b>📝️ {subject} - {user} ({date})</b><br>"

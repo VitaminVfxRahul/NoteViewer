@@ -18,8 +18,6 @@ class FilterWidget(QtWidgets.QWidget):
 
     def setup_ui(self):
         self.main_layout = QtWidgets.QHBoxLayout(self)
-
-
         # task widget
         self.task_combo = ContextCombo('Task', 'Select Task')
         self.task_combo.add_items(self.tasks)
